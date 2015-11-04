@@ -1,7 +1,10 @@
 require 'open4'
+require 'camera_manager/utils'
 
 module CameraManager
   class BinWrapper
+    include CameraWrapper::Utils
+
     def gphotofs_mount(mount_point)
       run "gphotofs #{mount_point}"
     end
@@ -45,9 +48,7 @@ module CameraManager
           status
         end
       rescue Errno::ENOENT
-        $stderr.puts "#{cmd} binary not found"
-
-        exit 1
+        bail "#{cmd} binary not found"
       end
     end
   end
