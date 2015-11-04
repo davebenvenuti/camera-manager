@@ -1,0 +1,57 @@
+#!/usr/bin/env ruby
+
+require 'bundler'
+
+Bundler.setup
+
+require 'camera_manager'
+require 'thor'
+
+module CameraManager
+  class CLI < Thor
+    desc "mount", "Mounts the camera at the configured mountpoint"
+    def mount
+      bin.gphotofs_mount config.mount_path
+
+      puts "Mounted camera at #{config.mount_path}"
+    end
+
+    desc "sync TYPE", "Syncs photos depending on TYPE"
+    long_desc <<-LONGDESC
+       `cm sync [local]` will sync from camera to local photo storage.  This is
+        also the behavior if no TYPE is defined
+
+       `cm sync acd` will sync from local photo storage to Amazon Cloud Drive
+    LONGDESC
+    def sync(type="local")
+      case type
+      when "local"
+        unless bin.gphotofs_mounted?
+          puts "Mounting camera..."
+          bin.gphotofs_mount config.mount_path
+        end
+
+        bin.rsync config.mount_path, config.photos_path        
+      when "acd"
+        puts "Not yet implemented"
+      else
+        $stderr.puts "TYPE must be one of local or acd (or blank)"
+
+        exit 1        
+      end
+    end
+
+    protected
+
+    def bin
+      @bin ||= CameraManager::BinWrapper.new
+    end
+
+    def config
+      CameraManager::Config.instance
+    end
+  end
+end
+
+CameraManager::CLI.start(ARGV)
+
