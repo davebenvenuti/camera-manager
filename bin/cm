@@ -26,12 +26,12 @@ module CameraManager
     def sync(type="local")
       case type
       when "local"
-        unless bin.gphotofs_mounted?
+        unless bin.gphotofs_mounted?(mount_path)
           puts "Mounting camera..."
-          bin.gphotofs_mount config.mount_path
+          bin.gphotofs_mount mount_path
         end
 
-        bin.rsync config.mount_path, config.photos_path        
+        bin.rsync config.camera_images_path, config.photos_path
       when "acd"
         puts "Not yet implemented"
       else
@@ -45,6 +45,10 @@ module CameraManager
 
     def bin
       @bin ||= CameraManager::BinWrapper.new
+    end
+
+    def mount_path
+      File.expand_path(config.mount_path)
     end
 
     def config
