@@ -26,14 +26,9 @@ module CameraManager
     def sync(type="local")
       case type
       when "local"
-        unless bin.gphotofs_mounted?(mount_path)
-          puts "Mounting camera..."
-          bin.gphotofs_mount mount_path
-        end
-
-        bin.rsync config.camera_images_path, config.photos_path
+        do_local_sync
       when "acd"
-        puts "Not yet implemented"
+        do_acd_sync
       else
         $stderr.puts "TYPE must be one of local or acd (or blank)"
 
@@ -43,6 +38,33 @@ module CameraManager
 
     protected
 
+    def do_local_sync
+      unless bin.gphotofs_mounted?(mount_path)
+        puts "Mounting camera..."
+        bin.gphotofs_mount mount_path
+      end
+
+      bin.rsync config.camera_images_path, config.photos_path      
+    end
+
+    def do_acd_sync
+      remote_files = CameraManager::ACD::File.ls_hash
+
+      Dir[self.photos_glob].each do |local_path|
+        local_file = File.basename local_path
+
+        if ! remote_files.key? local_file
+          puts "missing #{local_file}, uploading..."
+          # make sure we use the full path here
+          acd_cli "upload #{local_path} /"
+        end
+      end      
+    end
+
+    def acd_cli(*args)
+      bin.acd_cli args.join(' ')
+    end
+
     def bin
       @bin ||= CameraManager::BinWrapper.new
     end
@@ -51,6 +73,10 @@ module CameraManager
       File.expand_path(config.mount_path)
     end
 
+    def photos_glob
+      File.expand_path(File.join(config.photos_path, '/*.CR2'))
+    end
+    
     def config
       CameraManager::Config.instance
     end

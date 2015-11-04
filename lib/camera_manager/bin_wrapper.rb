@@ -33,6 +33,10 @@ module CameraManager
         .find { |l| l =~ /gphotofs on #{mount_point}/ }
     end
 
+    def acd_cli(*args)
+      run "acd_cli #{args.join(' ')}", false
+    end
+
     protected
 
     def run(cmd, show_output=true)
@@ -40,8 +44,13 @@ module CameraManager
         output = nil
 
         if show_output
-          PTY.spawn(cmd) do |r, w, pid|
-            r.each { |line| print line }
+          # http://www.shanison.com/2010/09/01/ruby-capture-output-in-realtime/
+          begin
+            PTY.spawn(cmd) do |r, w, pid|
+              r.each { |line| print line }
+            end
+          rescue Errno::EIO
+            # Just ignore
           end
         else
           stdout_combined = nil
