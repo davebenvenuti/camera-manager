@@ -31,7 +31,7 @@ module CameraManager
       protected
 
       def self.acd_cli(*args)
-        bin.acd_cli(args.join(' '), false)[:stdout]
+        bin.acd_cli(args)[:stdout]
       end
 
       def self.bin
