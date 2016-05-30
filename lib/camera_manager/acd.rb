@@ -4,6 +4,8 @@ module CameraManager
   module ACD    
     class File < Struct.new(:key, :name)
       def self.ls
+        acd_cli 'sync'
+
         if block_given?
           acd_cli('ls').each_line do |l|
             file = self.class.parse_acd_output_line l        
