@@ -1,5 +1,17 @@
 require 'camera_manager/bin_wrapper'
 
+class NilClass
+  def present?
+    false
+  end
+end
+
+class String
+  def present?
+    self.length > 0
+  end
+end
+
 module CameraManager
   module ACD    
     class File < Struct.new(:key, :name)
@@ -8,12 +20,12 @@ module CameraManager
 
         if block_given?
           acd_cli('ls').each_line do |l|
-            file = self.class.parse_acd_output_line l        
+            file = self.parse_acd_output_line l        
             yield file unless file.nil?
           end
         else
           acd_cli('ls').lines.map do |l|
-            self.class.parse_acd_output_line l
+            self.parse_acd_output_line l
           end.compact
         end
       end
