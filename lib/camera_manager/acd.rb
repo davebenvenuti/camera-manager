@@ -13,14 +13,14 @@ class String
 end
 
 module CameraManager
-  module ACD    
+  module ACD
     class File < Struct.new(:key, :name)
       def self.ls
         acd_cli 'sync'
 
         if block_given?
           acd_cli('ls').each_line do |l|
-            file = self.parse_acd_output_line l        
+            file = self.parse_acd_output_line l
             yield file unless file.nil?
           end
         else
@@ -39,22 +39,28 @@ module CameraManager
 
         ret
       end
-      
+
       protected
 
       def self.acd_cli(*args)
-        bin.acd_cli(args)[:stdout]
+        output = bin.acd_cli(args)
+
+        if output[:stderr]
+          $stderr.puts output[:stderr]
+        end
+
+        output[:stdout]
       end
 
       def self.bin
         @bin ||= CameraManager::BinWrapper.new
       end
-      
+
       def self.parse_acd_output_line(entry)
         parts = entry.split(' ', 3)
 
         key = parts.first.gsub(/[\[\]]/, '').strip
-        name = parts.last.strip   
+        name = parts.last.strip
 
         if key.present? && name.present?
           self.new(key, name)
@@ -65,4 +71,3 @@ module CameraManager
     end
   end
 end
-
